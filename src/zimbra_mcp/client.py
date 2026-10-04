@@ -32,6 +32,11 @@ class ZimbraClient:
         try:
             self._comm = Communication(self.config.url)
 
+            if self.config.auth_token:
+                # Pre-issued token: no AuthRequest. If it has expired, requests fail with an auth fault.
+                self._token = self.config.auth_token
+                return
+
             self._token = auth.authenticate(
                 self.config.url,
                 self.config.user,
@@ -510,6 +515,10 @@ class ZimbraClient:
         Returns:
             Search results
         """
+        # An empty query is a parse error on some servers (Zimbra 7.x / Zimbra Desktop answer
+        # mail.QUERY_PARSE_ERROR); "is:anywhere" means every address book.
+        if not query or not query.strip():
+            query = "is:anywhere"
         params = {
             "query": query,
             "limit": limit,

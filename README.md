@@ -36,7 +36,8 @@ ZIMBRA_ENABLE_SEND=false
 |----------|-------------|---------|
 | `ZIMBRA_URL` | Zimbra SOAP endpoint URL | (required) |
 | `ZIMBRA_USER` | Zimbra account email | (required) |
-| `ZIMBRA_PASSWORD` | Zimbra account password | (required) |
+| `ZIMBRA_PASSWORD` | Zimbra account password | (required unless `ZIMBRA_AUTH_TOKEN` is set) |
+| `ZIMBRA_AUTH_TOKEN` | A pre-issued auth token used instead of signing in with the password, for example a delegated token or one issued by a local Zimbra Desktop backend. Requests fail with an auth error once it expires. | (none) |
 | `ZIMBRA_TIMEOUT` | Request timeout in seconds | `30` |
 | `ZIMBRA_ENABLE_SEND` | Enable `send_email` tool (`true`/`1`/`yes`) | `false` |
 

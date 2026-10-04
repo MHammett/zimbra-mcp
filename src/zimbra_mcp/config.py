@@ -15,6 +15,9 @@ class ZimbraConfig:
     password: str
     timeout: int = 30
     enable_send: bool = False
+    # A ready-made auth token, used instead of signing in with the password (for example one issued by a
+    # local Zimbra Desktop backend, or a delegated token from an administrator).
+    auth_token: str | None = None
 
     @classmethod
     def from_env(cls) -> "ZimbraConfig":
@@ -24,6 +27,7 @@ class ZimbraConfig:
         url = os.getenv("ZIMBRA_URL")
         user = os.getenv("ZIMBRA_USER")
         password = os.getenv("ZIMBRA_PASSWORD")
+        auth_token = os.getenv("ZIMBRA_AUTH_TOKEN") or None
         timeout = int(os.getenv("ZIMBRA_TIMEOUT", "30"))
         enable_send = os.getenv("ZIMBRA_ENABLE_SEND", "").lower() in ("true", "1", "yes")
 
@@ -31,7 +35,14 @@ class ZimbraConfig:
             raise ValueError("ZIMBRA_URL not defined")
         if not user:
             raise ValueError("ZIMBRA_USER not defined")
-        if not password:
-            raise ValueError("ZIMBRA_PASSWORD not defined")
+        if not password and not auth_token:
+            raise ValueError("ZIMBRA_PASSWORD not defined (or set ZIMBRA_AUTH_TOKEN)")
 
-        return cls(url=url, user=user, password=password, timeout=timeout, enable_send=enable_send)
+        return cls(
+            url=url,
+            user=user,
+            password=password or "",
+            timeout=timeout,
+            enable_send=enable_send,
+            auth_token=auth_token,
+        )

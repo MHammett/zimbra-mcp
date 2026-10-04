@@ -59,6 +59,26 @@ class TestZimbraConfig:
         with pytest.raises(ValueError, match="ZIMBRA_PASSWORD"):
             ZimbraConfig.from_env()
 
+    @patch("zimbra_mcp.config.load_dotenv")
+    def test_from_env_auth_token_without_password(self, _mock_dotenv, monkeypatch):
+        monkeypatch.setenv("ZIMBRA_URL", "https://z.test/service/soap")
+        monkeypatch.setenv("ZIMBRA_USER", "u@test.com")
+        monkeypatch.delenv("ZIMBRA_PASSWORD", raising=False)
+        monkeypatch.setenv("ZIMBRA_AUTH_TOKEN", "tok")
+
+        cfg = ZimbraConfig.from_env()
+        assert cfg.auth_token == "tok"
+        assert cfg.password == ""
+
+    @patch("zimbra_mcp.config.load_dotenv")
+    def test_from_env_neither_password_nor_token(self, _mock_dotenv, monkeypatch):
+        monkeypatch.setenv("ZIMBRA_URL", "https://z.test/service/soap")
+        monkeypatch.setenv("ZIMBRA_USER", "u@test.com")
+        monkeypatch.delenv("ZIMBRA_PASSWORD", raising=False)
+        monkeypatch.delenv("ZIMBRA_AUTH_TOKEN", raising=False)
+
+        with pytest.raises(ValueError, match="ZIMBRA_AUTH_TOKEN"):
+            ZimbraConfig.from_env()
     def test_direct_construction(self):
         cfg = ZimbraConfig(url="https://z.test", user="u", password="p")
         assert cfg.timeout == 30

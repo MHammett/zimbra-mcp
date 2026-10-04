@@ -63,6 +63,16 @@ class TestConnection:
         with pytest.raises(ZimbraConnectionError, match="network"):
             client.connect()
 
+    @patch("zimbra_mcp.client.auth.authenticate")
+    @patch("zimbra_mcp.client.Communication")
+    def test_connect_with_auth_token_skips_password_auth(self, mock_comm_cls, mock_auth):
+        cfg = ZimbraConfig(url="https://z.test/service/soap", user="u@test.com", password="", auth_token="pre-issued")
+        c = ZimbraClient(cfg)
+        c.connect()
+        assert c.is_connected
+        assert c._token == "pre-issued"
+        mock_auth.assert_not_called()
+        mock_comm_cls.assert_called_once_with(cfg.url)
     def test_disconnect(self, connected_client):
         connected_client.disconnect()
         assert not connected_client.is_connected
@@ -431,6 +441,14 @@ class TestSearchContacts:
         assert params["query"] == "John"
         assert params["types"] == "contact"
 
+
+    def test_empty_query_searches_all_address_books(self, connected_client):
+        resp = _make_ok_response("SearchResponse", {"cn": []})
+        _setup_response(connected_client, resp)
+
+        connected_client.search_contacts("  ")
+        params = _get_request_params(connected_client)
+        assert params["query"] == "is:anywhere"
 
 class TestGetContact:
     def test_params(self, connected_client):
